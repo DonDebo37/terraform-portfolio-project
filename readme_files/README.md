@@ -63,14 +63,14 @@ npx create-next-app@latest nextjs-blog --use-npm --example "https://github.com/v
 
 * Write the following code inside:
 
-![next.js](images/next.config.js screenshot.png)
+![next.js](images/next.config.js-screenshot.png)
 
 cd james-blog
 
 npm run dev
 This should start your next.js app on http://localhost:3000/
 
-![next.js](images/Next-js app.png)
+![next.js](images/Next-js-app.png)
 
 Running on localhost means that we are just running this application locally on our machine.
 
@@ -114,7 +114,7 @@ i) Inside “terraform-js” folder create a new file and name it “state.tf”
 
 ii) Here we are going to setup our terraform state with S3 and DynamoDB
 
-![State.tf](images/state-file screenshot.png)
+![State.tf](images/state-file-screenshot.png)
 
 * You can name your bucket and DynamoDb table whatever you want, but do remember to use the region that is closest to you.
 
@@ -142,7 +142,7 @@ With “bucket = aws_s3_bucket.nextjs_bucket.id” we specify the bucket we want
 
 v) Allow public access to our S3 bucket
 
-![main.tf](images/main.tf-resources screenshot.png)
+![main.tf](images/main.tf-resources-screenshot.png)
 
 This configuration disables the public access block settings that prevent any public access.
 
