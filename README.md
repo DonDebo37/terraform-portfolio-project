@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # terraform-portfolio-project
 This is a Next.js portfolio website on AWS using Infrastructure as Code (IaC) principles with Terraform. This project will give you hands-on experience with Terraform, S3, and CloudFront, mimicking a real-world deployment scenario.
 
@@ -163,4 +164,6 @@ vii) Attach a bucket policy
 The purpose of the bucket policy is to define detailed access permissions for the bucket and its objects using IAM policy.
 
 ![main.tf resources](images/bucketACL&bucket-policy.png)
+=======
+>>>>>>> 89cbdbd7c29c6e66432a0b98ad864781d390424e
 
