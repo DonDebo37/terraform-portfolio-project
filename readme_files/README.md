@@ -7,7 +7,6 @@ Scenario Overview
 Client: James Smith, a freelance web designer
 
 # Project: Portfolio Website Deployment
-
 Project Description:  James Smith, a freelance web designer, wants to showcase his work and attract potential clients through an online portfolio. He has designed a modern, responsive single-page website using the Next.js framework. James requires this website to be hosted on a robust, scalable, and cost-effective platform. Additionally, the website needs to be highly available and deliver fast loading times for a global audience.
 
 My Role: As a team of cloud engineers, My task is to deploy James's Next.js portfolio website on AWS using Infrastructure as Code (IaC) principles with Terraform. This project will give me hands-on experience with Terraform, S3, and CloudFront, mimicking a real-world deployment scenario.
@@ -31,7 +30,6 @@ Ensured Security and Performance: Applied best practices for security and perfor
 Deploy everything to GitHub: Create a GitHub repo and host all your project files and code there.
 Here is the Architecture designed for you:
 
-
 # Next Steps
 With this understanding of Next.js, you're ready to start the application preparation. In the next part of our lesson, you will:
 
@@ -46,7 +44,7 @@ These steps will set the stage for deploying your Next.js application on AWS usi
 Create a New GitHub Repository:
 
 Go to GitHub and create a new repository named terraform-portfolio-project.
-Initialize the repository with a README file.
+Initialize the repository with a README.md file.
 # 2. Clone the Repository:
 
  git clone https://github.com/<your-username>/terraform-portfolio-project.git
@@ -164,3 +162,148 @@ The purpose of the bucket policy is to define detailed access permissions for th
 
 ![main.tf resources](images/bucketACL&bucket-policy.png)
 =======
+This policy allows public-read access to the object in S3.
+
+viii) Setup CloudFront service to serve our static website from S3
+
+This will serve static content from S3 through CloudFront.
+
+ix) Define Origin Access Identity (OAI)
+
+This is a special CloudFront user that gives CloudFront access to our S3 bucket so that we can serve the next.js application.
+
+By using OAI we ensure that only CloudFront can directly access our S3 bucket.
+
+![main.tf resources](images/OAI.PNG)
+
+x) Define CloudFront Distribution
+
+# A. As usual we start with the resource and I named it “nextjs_distribution”.
+
+The resource “aws_cloudfront_distribution” is the resource that will configure our cloudfront distribution, which serves the content delivery network to distribute our next.js application stored in S3.
+
+# B. The Origin block (lines 68–70) specifies the origin settings for our CloudFront distribution.
+
+We specified the origin with a domain name with:
+
+· Our S3 bucket and we add a regional domain name.
+
+· Add an origin_id (It’s a unique identifier for our configuration and helps to uniquely identifying this origin within the CloudFront distribution.
+
+The domain name “aws_s3_bucket.nextjs_bucket.bucket_regional_domain_name” tells CloudFront where to fetch the content from, in this case the bucket we have created before and specified at this moment.
+
+# C. Then we have the S3 origin config block which contains settings specific to S3 as the origin.
+
+“origin_access_identity” specifies the OAI that CloudFront uses to access the S3 bucket. So we used the resource and resource name used when creating the OAI and then specify a path for it “cloudfront_access_identity_path”.
+
+This ensures that only CloudFront can access the content inside of our S3 bucket, which of course, adds an extra layer of security.
+
+To summerize, the purpose of this block (lines 65–75) is for setting up CloudFront to work with our S3 bucket, and by specifying the origin settings we direct CloudFront to fetch from the S3 bucket. The S3 origin config ensures that the content is securely accessed using the OAI, preventing direct access to S3 bucket from outside of CloudFront.
+
+This way, no one will be able to access the S3 bucket and our content apart from this CloudFront distribution using the OAI that we have defined.
+
+# D. Configure additional settings for the CloudFront Distribution
+
+These additional settings are important for enabling and optimizing distribution for our next.js portfolio website.
+
+Enabled set to true means that the CloudFront distribution is active and will serve content as soon as it is deployed.
+
+“is_ipv6_enabled” is set to true, which also enables connections with ipv6 (and not only ipv4) to access our CloudFront distribution.
+
+“default_root_object” specifies the default root object for our distribution which in our case is our index.html file. This index.html file is being generated from the next.js build that we created from the “out” folder.
+
+# E. Enable caching behaviour
+
+This will define how CloudFront should handle the caching for the requests to our origin, in our case, our S3 bucket.
+
+“allowed_methods” specify the http methods allowed for our caching behaviour. Here we are saying that we are allowing the “GET”, the “HEAD” and the “OPTIONS” requests which are typical requests for retrieving any resources.
+
+“cached_methods” specify the http methods to actually cache. So, we are saying we are allowing the methods “GET”, “HEAD” and “OPTIONS”, but we just want to cache the “GET” and “HEAD” requests. By caching the “GET” and “HEAD” requests we make sure that these common retrieval requests are serve quickly from the cache.
+
+“target_origin_id” links the cache behaviour to the our specified origin, in our case, our S3 bucket. This ensures that requests matching this behaviour are directed to our S3 bucket.
+
+# F. “forward_values”
+
+Inside the forward values we have the “query_string” which indicates where to forward the query strings to the origin. Setting this to false means that query strings are not forwarded, which simplifies our caching and also improves our performance.
+
+“cookies” specifies how cookies should be forward to our S3 bucket or origin. Setting it to none ensures that cookies are not forward, which can improve again caching efficiency and our reduces our complexity.
+
+“viewer_protocol_policy” ensures that viewers are redirected to https. This policy, of course, improves our security by ensuring all communication between the client and our CloudFront CDN are secured and encrypted.
+
+“min_ttl” is the minimum amount of time an object is cached. Setting this to zero allows for immediate updates if needed.
+
+“default_ttl” is the default amount of time an object is cached. Here is set to 3600 seconds (1 hour).
+
+“max_ttl” is the maximum amount of time an object is time. Setting this to 86400 seconds (24 hours) ensures that the content is refreshed at least once a day.
+
+![main.tf resources](images/main.tf-resources.png)
+
+# G. Restrictions
+
+With restrictions we can configure geographic restrictions for the CloudFront distribution. This determines from which locations users can access our content. Since we want everyone to access our content, we will put the restrictions as none.
+
+# H. Viewer Certificate
+
+“viewer_certificate” configure the SSL and TLS settings for our CloudFront distribution which ensures secure communication between our users and CloudFront.
+
+![main.tf resources](images/main.tf-restrictions.png)
+
+# xi. Run terraform commands
+
+Go back to VS code and make sure you are in the “terraform-js” folder
+
+A) Run: terraform init
+
+This will initialize our backend.
+
+B) Run: terraform plan
+
+This will give us the plan of what we want to deploy.
+
+C) Run: terraform apply
+
+Enter the value “yes” when it asks you if you want to perform these actions.
+
+
+![application.tf](images/terraform-apply.png)
+
+D) Run: terraform show
+
+We do this to see the AWS CloudFront distribution URL. Then copy the domain name in my case it is "d29rmepjz2is9s.cloudfront.net/"
+
+
+# xii. Deploy the “out” folder
+
+a) Now we deploy our “out” which is actually our nextjs folder into our S3 bucket
+
+b) Change directory to the nextjs-blog directory: cd ..
+
+c) Upload nextjs to the S3 bucket
+
+Run: aws s3 sync ./out s3://s3-nextjs-portfolio-bucket-st
+
+“s3-nextjs-portfolio-bucket-st” is the S3 bucket name we specified in our main terraform file
+
+xiii. Check if you can see the nextjs application
+
+a) Use the domain name you copied before. In my case is: “d29rmepjz2is9s.cloudfront.net/”
+
+You should see the nextjs application that we just deploy to S3 through CloudFront:
+
+![application.tf](images/next.js-application.png)
+
+# xiv. Push the code to your GitHub repository
+
+a) git init
+
+b) git add .
+
+c) git commit -m “Next.js portfolio starter kit”
+
+d) git remote add origin https://github.com/<your-username>/terraform-portfolio-project.git
+
+e) git push -u origin master
+
+# xv. Destroy the stack
+
+a) Run: terraform destroy
